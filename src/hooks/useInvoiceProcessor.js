@@ -12,6 +12,29 @@ const LOADING_STEPS = [
   'Preparing reconciliation...',
 ]
 
+function sanitizeInvoice(data) {
+  return {
+    vendor: data.vendor || 'Unknown Vendor',
+    invoiceNo: data.invoiceNo || data.invoice_no || data.invoice_number || 'N/A',
+    date: data.date || data.invoice_date || 'N/A',
+    dueDate: data.dueDate || data.due_date || null,
+    poRef: data.poRef || data.po_ref || data.po_number || null,
+    paymentTerms: data.paymentTerms || data.payment_terms || 'Net 30',
+    taxRate: Number(data.taxRate || data.tax_rate || data.gst_rate || 18),
+    isHandwritten: data.isHandwritten || false,
+    items: Array.isArray(data.items) ? data.items.map(item => ({
+      desc: item.desc || item.description || item.name || 'Item',
+      qty: Number(item.qty || item.quantity || 1),
+      rate: Number(item.rate || item.unit_price || item.price || 0),
+      amount: Number(item.amount || item.total || item.line_total || 0),
+    })) : [],
+    subtotal: Number(data.subtotal || data.sub_total || 0),
+    tax: Number(data.tax || data.tax_amount || data.gst_amount || 0),
+    total: Number(data.total || data.grand_total || data.total_amount || 0),
+    confidence: data.confidence || { vendor: 90, invoiceNo: 90, date: 90, total: 90 },
+  }
+}
+
 export function useInvoiceProcessor() {
   const [invoice, setInvoice] = useState(null)
   const [po, setPO] = useState(null)
@@ -40,7 +63,24 @@ export function useInvoiceProcessor() {
       await stepThrough(LOADING_STEPS)
       const base64 = await fileToBase64(file)
       const mimeType = getMimeType(file)
-      const extracted = await extractInvoiceData(base64, mimeType)
+      const raw = await extractInvoiceData(base64, mimeType)
+      const extracted = sanitizeInvoice(raw)
+
+      if (!extracted.items || extracted.items.length === 0) {
+        throw new Error('Could not extract line items from this invoice. Please try a clearer image.')
+      }
+
+      // recalculate if values are missing
+      if (extracted.subtotal === 0) {
+        extracted.subtotal = extracted.items.reduce((s, i) => s + i.qty * i.rate, 0)
+      }
+      if (extracted.tax === 0 && extracted.taxRate > 0) {
+        extracted.tax = parseFloat((extracted.subtotal * extracted.taxRate / 100).toFixed(2))
+      }
+      if (extracted.total === 0) {
+        extracted.total = parseFloat((extracted.subtotal + extracted.tax).toFixed(2))
+      }
+
       setInvoice(extracted)
 
       if (extracted.poRef) {

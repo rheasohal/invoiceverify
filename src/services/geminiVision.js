@@ -35,10 +35,3 @@ export function getMimeType(file) {
   }
   return map[ext] || file.type || 'image/jpeg'
 }
-```
-
----
-
-**Also update `.env.example`** in root to:
-```
-VITE_SERVER_URL=http://localhost:3001

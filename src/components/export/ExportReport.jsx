@@ -103,4 +103,61 @@ export default function ExportReport({ invoice, po, result }) {
 
     // Discrepancies
     if (result.discrepancies.length > 0) {
-      doc.set
+      doc.setFontSize(13)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Discrepancies', 14, doc.lastAutoTable.finalY + 14)
+
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [['Field', 'Invoice Value', 'Expected Value', 'Severity']],
+        body: result.discrepancies.map(d => [d.field, d.invoiceVal, d.poVal, d.severity.toUpperCase()]),
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [154, 52, 18], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [254, 240, 232] },
+      })
+    }
+
+    // Math verification
+    doc.setFontSize(13)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Mathematical Verification', 14, doc.lastAutoTable.finalY + 14)
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 20,
+      head: [['Check', 'Stated Amount', 'Calculated Amount', 'Pass']],
+      body: result.math.results.map(m => [
+        m.label,
+        fmt(m.stated),
+        fmt(m.calculated),
+        m.pass ? 'PASS ✓' : 'FAIL ✗',
+      ]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [45, 80, 22], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [234, 243, 222] },
+    })
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setTextColor(120, 113, 108)
+      doc.text(`InvoiceVerify AI Reconciliation · Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: 'center' })
+    }
+
+    doc.save(`reconciliation-${invoice.invoiceNo}-${Date.now()}.pdf`)
+  }
+
+  return (
+    <button onClick={handleExport} style={{
+      background: 'var(--navy)', color: 'var(--cream)',
+      border: 'none', padding: '9px 18px',
+      borderRadius: '8px', fontSize: '12px',
+      fontFamily: 'Geist, sans-serif', fontWeight: 500,
+      cursor: 'pointer', display: 'inline-flex',
+      alignItems: 'center', gap: '6px',
+    }}>
+      📥 Export Report
+    </button>
+  )
+}

@@ -54,4 +54,32 @@ export default function ThreeWayMatch({ invoice, po, grn, lineResults }) {
                 <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', maxWidth: '160px', fontSize: '11px' }}>{r.desc}</td>
                 <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{r.invQty ?? '—'}</td>
                 <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{r.poQty}</td>
-                <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{
+                <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{r.invRate != null ? fmt(r.invRate) : '—'}</td>
+                <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right', fontFamily: 'DM Mono, monospace' }}>{fmt(r.poRate)}</td>
+                <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--cream-deep)', textAlign: 'right' }}>
+                  <StatusBadge status={r.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function StatusBadge({ status }) {
+  const styles = {
+    match:    { bg: 'var(--match-bg)',    color: 'var(--match)',    label: 'Match' },
+    mismatch: { bg: 'var(--mismatch-bg)', color: 'var(--mismatch)', label: 'Mismatch' },
+    partial:  { bg: 'var(--partial-bg)',  color: 'var(--partial)',  label: 'Partial' },
+    missing:  { bg: 'var(--mismatch-bg)', color: 'var(--mismatch)', label: 'Missing' },
+  }
+  const s = styles[status] || styles.partial
+  return (
+    <span style={{ background: s.bg, color: s.color, fontSize: '10px', fontFamily: 'DM Mono, monospace', padding: '2px 8px', borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'currentColor', opacity: 0.7 }} />
+      {s.label}
+    </span>
+  )
+}
