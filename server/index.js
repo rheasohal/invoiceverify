@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import fetch from 'node-fetch'
 import dotenv from 'dotenv'
+import posRouter from './routes/pos.js'
+import grnsRouter from './routes/grns.js'
 
 dotenv.config()
 
@@ -10,6 +12,9 @@ const PORT = process.env.PORT || 3001
 
 app.use(cors())
 app.use(express.json({ limit: '20mb' }))
+
+app.use('/api/pos', posRouter)
+app.use('/api/grns', grnsRouter)
 
 app.post('/api/extract', async (req, res) => {
   const { imageBase64, mimeType } = req.body
@@ -74,12 +79,10 @@ Rules:
 
     const data = await geminiRes.json()
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
-
     if (!rawText) return res.status(500).json({ error: 'Empty response from Gemini' })
 
     const cleaned = rawText.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(cleaned)
-
     return res.json(parsed)
 
   } catch (err) {

@@ -9,16 +9,18 @@ import ExportReport from './components/export/ExportReport.jsx'
 import { useInvoiceProcessor } from './hooks/useInvoiceProcessor.js'
 import { useReconciliation } from './hooks/useReconciliation.js'
 import { getProcessedInvoices } from './engine/duplicateDetector.js'
+import POManager from './components/po/POManager.jsx'
+import { usePOStore } from './hooks/usePOStore.js'
 
 export default function App() {
   const [activePage, setActivePage] = useState('process')
   const { invoice, po, grn, loading, loadingMsg, error, scenarioKey, processFile, loadSample, reset } = useInvoiceProcessor()
   const result = useReconciliation(invoice, po, grn)
   const history = getProcessedInvoices()
-
+  const { pos, grns, loading: poLoading, addPO, removePO, addGRN, getPOByNumber, getGRNByPO } = usePOStore()
   return (
     <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
-      <Header activePage={activePage} setActivePage={setActivePage} historyCount={history.length} />
+      <Header activePage={activePage} setActivePage={setActivePage} historyCount={history.length} poCount={pos.length} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', minHeight: 'calc(100vh - 60px)' }}>
 
@@ -186,6 +188,16 @@ export default function App() {
               )}
             </div>
           )}
+         {activePage === 'pos' && (
+          <POManager
+            pos={pos || []}
+            grns={grns || []}
+            loading={poLoading}
+            onAddPO={addPO}
+            onDeletePO={removePO}
+            onAddGRN={addGRN}
+          />
+        )}
         </div>
       </div>
     </div>

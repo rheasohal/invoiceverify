@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function Header({ activePage, setActivePage, historyCount }) {
+export default function Header({ activePage, setActivePage, historyCount, poCount }) {
   return (
     <header style={{
       background: 'var(--navy)',
@@ -37,6 +37,7 @@ export default function Header({ activePage, setActivePage, historyCount }) {
         {[
           { key: 'process', label: 'Process Invoice' },
           { key: 'history', label: `History ${historyCount > 0 ? `(${historyCount})` : ''}` },
+          { key: 'pos', label: `POs ${poCount > 0 ? `(${poCount})` : ''}` },
         ].map(({ key, label }) => (
           <button
             key={key}

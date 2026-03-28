@@ -84,13 +84,42 @@ export function useInvoiceProcessor() {
       setInvoice(extracted)
 
       if (extracted.poRef) {
-        const matchedPO = samplePOs[extracted.poRef]
-        if (matchedPO) {
-          setPO(matchedPO)
-          const matchedGRN = sampleGRNs[extracted.poRef]
-          if (matchedGRN) setGRN(matchedGRN)
-        }
+  // Check DB first via API, fall back to sample data
+  try {
+    const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
+    const poRes = await fetch(`${SERVER_URL}/api/pos/${extracted.poRef}`)
+    if (poRes.ok) {
+      const dbPO = await poRes.json()
+      setPO({
+        poNo: dbPO.po_number,
+        vendor: dbPO.vendor,
+        date: dbPO.date,
+        paymentTerms: dbPO.payment_terms,
+        items: dbPO.items.map(i => ({ desc: i.description, qty: i.qty, rate: i.rate })),
+        total: dbPO.total,
+      })
+      const grnRes = await fetch(`${SERVER_URL}/api/grns/po/${extracted.poRef}`)
+      if (grnRes.ok) {
+        const dbGRN = await grnRes.json()
+        setGRN({
+          grnNo: dbGRN.grn_number,
+          poRef: dbGRN.po_number,
+          receivedItems: dbGRN.items.map(i => ({ desc: i.description, qtyReceived: i.qty_received })),
+        })
       }
+    } else {
+      const matchedPO = samplePOs[extracted.poRef]
+      if (matchedPO) {
+        setPO(matchedPO)
+        const matchedGRN = sampleGRNs[extracted.poRef]
+        if (matchedGRN) setGRN(matchedGRN)
+      }
+    }
+  } catch {
+    const matchedPO = samplePOs[extracted.poRef]
+    if (matchedPO) setPO(matchedPO)
+  }
+}
     } catch (err) {
       setError(err.message)
     } finally {
