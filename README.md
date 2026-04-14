@@ -4,46 +4,46 @@ An AI-powered invoice verification and reconciliation system that uses **Google 
 
 ## Features
 
-### 🔍 AI Invoice Extraction
+###  AI Invoice Extraction
 - Upload invoice images (JPEG, PNG, WebP) or PDFs
 - Powered by **Gemini 2.5 Flash** for OCR and structured data extraction
 - Handles both printed and handwritten invoices
 - Extracts vendor, line items, totals, tax rates, PO references, and more
 - Per-field confidence scoring
 
-### 📊 Three-Way Reconciliation
+###  Three-Way Reconciliation
 - **Invoice ↔ PO Matching** — Automatically matches invoices to POs by reference number
 - **Invoice ↔ GRN Matching** — Cross-references quantities received against quantities invoiced
 - **Line-by-line comparison** — Qty, unit price, and amount verified for every line item
 
-### 🧮 Mathematical Verification
+###  Mathematical Verification
 - Independent recalculation of all arithmetic (qty × rate, subtotals, GST, grand totals)
 - Flags discrepancies between invoice-stated values and computed values
 - Catches common errors: wrong tax calculations, mismatched totals, rounding issues
 
-### 📋 Business Rules Engine
+###  Business Rules Engine
 - Configurable GST rate validation
 - Approved vendor list checking
 - Payment terms policy enforcement (Net 30/45/60)
 - Maximum unit price thresholds
 - Invoice date vs PO date validation
 
-### 🚨 Anomaly Detection
+###  Anomaly Detection
 - Suspiciously round total amounts
 - Abnormally high unit prices
 - Missing PO references
 - Duplicate invoice detection (session-based)
 
-### 📑 Purchase Order & GRN Management
+###  Purchase Order & GRN Management
 - Create and manage POs with line items directly in the app
 - Record GRNs against existing POs
 - Data persisted in SQLite database (per-user)
 
-### 📤 Export
+###  Export
 - One-click PDF report generation with full reconciliation details
 - Includes match scores, discrepancies, math verification results, and business rule checks
 
-### 🔐 Authentication
+###  Authentication
 - User registration and login with JWT-based auth
 - Per-user data isolation (POs, GRNs, settings, vendor lists)
 
