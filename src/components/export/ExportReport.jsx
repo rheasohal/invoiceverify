@@ -70,7 +70,6 @@ export default function ExportReport({ invoice, po, result }) {
         ['Total Fields Checked', result.totalFields],
         ['Matched Fields', result.matchedFields],
         ['Discrepancies Found', result.discrepancyCount],
-        ['Flags Raised', result.flagCount],
         ['Math Errors', result.math.errorCount],
         ['Business Rule Failures', result.rules.failCount],
       ],

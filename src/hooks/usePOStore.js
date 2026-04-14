@@ -1,66 +1,67 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getAllPOs, createPO, deletePO, getAllGRNs, createGRN } from '../services/poService.js'
 
-export function usePOStore() {
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
+
+function authHeaders(token) {
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+}
+
+export function usePOStore(token) {
   const [pos, setPOs] = useState([])
   const [grns, setGRNs] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
   const fetchAll = useCallback(async () => {
+    if (!token) return
     setLoading(true)
-    setError(null)
     try {
-      const [poData, grnData] = await Promise.all([getAllPOs(), getAllGRNs()])
-      setPOs(poData)
-      setGRNs(grnData)
+      const [poRes, grnRes] = await Promise.all([
+        fetch(`${SERVER_URL}/api/pos`, { headers: authHeaders(token) }),
+        fetch(`${SERVER_URL}/api/grns`, { headers: authHeaders(token) }),
+      ])
+      if (poRes.ok) setPOs(await poRes.json())
+      if (grnRes.ok) setGRNs(await grnRes.json())
     } catch (err) {
-      setError(err.message)
+      console.error(err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [token])
 
-  useEffect(() => {
-  fetchAll().catch(() => {
-    setPOs([])
-    setGRNs([])
-    setLoading(false)
-  })
-}, [])
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   const addPO = useCallback(async (poData) => {
-    const created = await createPO(poData)
-    setPOs(prev => [created, ...prev])
-    return created
-  }, [])
+    const res = await fetch(`${SERVER_URL}/api/pos`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify(poData),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to create PO')
+    setPOs(prev => [data, ...prev])
+    return data
+  }, [token])
 
   const removePO = useCallback(async (poNumber) => {
-    await deletePO(poNumber)
+    await fetch(`${SERVER_URL}/api/pos/${poNumber}`, { method: 'DELETE', headers: authHeaders(token) })
     setPOs(prev => prev.filter(p => p.po_number !== poNumber))
-  }, [])
+  }, [token])
 
   const addGRN = useCallback(async (grnData) => {
-    const created = await createGRN(grnData)
-    setGRNs(prev => [created, ...prev])
-    return created
-  }, [])
+    const res = await fetch(`${SERVER_URL}/api/grns`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify(grnData),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to create GRN')
+    setGRNs(prev => [data, ...prev])
+    return data
+  }, [token])
 
   const getPOByNumber = useCallback((poNumber) => {
     return pos.find(p => p.po_number === poNumber) || null
   }, [pos])
 
-  const getGRNByPO = useCallback((poNumber) => {
-    return grns.find(g => g.po_number === poNumber) || null
-  }, [grns])
-
-  return {
-    pos, grns,
-    loading, error,
-    fetchAll,
-    addPO, removePO,
-    addGRN,
-    getPOByNumber,
-    getGRNByPO,
-  }
+  return { pos, grns, loading, fetchAll, addPO, removePO, addGRN, getPOByNumber }
 }

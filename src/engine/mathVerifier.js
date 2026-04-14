@@ -32,7 +32,9 @@ export function verifyMath(invoice) {
 
   // Check tax = subtotal × taxRate / 100
   const calcTax = parseFloat((calcSubtotal * (invoice.taxRate / 100)).toFixed(2))
-  const statedTax = parseFloat(invoice.tax.toFixed(2))
+  // Use Gemini's raw extracted tax if available, otherwise use invoice.tax
+  const rawTax = invoice.statedTax !== undefined ? invoice.statedTax : invoice.tax
+  const statedTax = parseFloat((rawTax || 0).toFixed(2))
   results.push({
     label: `GST @ ${invoice.taxRate}% on Subtotal`,
     type: 'tax',
@@ -44,7 +46,9 @@ export function verifyMath(invoice) {
 
   // Check total = subtotal + tax
   const calcTotal = parseFloat((calcSubtotal + calcTax).toFixed(2))
-  const statedTotal = parseFloat(invoice.total.toFixed(2))
+  // Use Gemini's raw extracted total if available, otherwise use invoice.total
+  const rawTotal = invoice.statedTotal !== undefined ? invoice.statedTotal : invoice.total
+  const statedTotal = parseFloat((rawTotal || 0).toFixed(2))
   results.push({
     label: 'Subtotal + GST → Grand Total',
     type: 'total',

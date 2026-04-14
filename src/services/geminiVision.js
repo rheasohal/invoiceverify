@@ -1,17 +1,18 @@
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
 
-export async function extractInvoiceData(imageBase64, mimeType = 'image/jpeg') {
+export async function extractInvoiceData(imageBase64, mimeType = 'image/jpeg', token) {
   const response = await fetch(`${SERVER_URL}/api/extract`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ imageBase64, mimeType }),
   })
-
   if (!response.ok) {
     const err = await response.json()
     throw new Error(err?.error || 'Server error during extraction')
   }
-
   return await response.json()
 }
 
@@ -26,12 +27,6 @@ export async function fileToBase64(file) {
 
 export function getMimeType(file) {
   const ext = file.name.split('.').pop().toLowerCase()
-  const map = {
-    pdf: 'application/pdf',
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    webp: 'image/webp',
-  }
+  const map = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' }
   return map[ext] || file.type || 'image/jpeg'
 }
