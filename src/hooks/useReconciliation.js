@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { verifyMath } from '../engine/mathVerifier.js'
 import { validateBusinessRules } from '../engine/businessRules.js'
 import { detectAnomalies } from '../engine/anomalyDetector.js'
@@ -6,19 +6,28 @@ import { checkDuplicate, registerInvoice } from '../engine/duplicateDetector.js'
 
 export function useReconciliation(invoice, po, grn, userRules, processedSet, setProcessedSet)  {
   const rulesKey = JSON.stringify(userRules)
+  const registeredRef = useRef(null)
+
+  // Register invoice in processedSet via useEffect (not inside useMemo)
+  // This ensures registration happens exactly once per new invoice, not on every re-render
+  useEffect(() => {
+    if (!invoice) { registeredRef.current = null; return }
+    const key = invoice.invoiceNo?.trim().toLowerCase()
+    const hasValidKey = !!key && key !== 'n/a'
+    if (hasValidKey && registeredRef.current !== key && !processedSet?.has(key)) {
+      registeredRef.current = key
+      setProcessedSet?.(prev => new Set([...prev, key]))
+      registerInvoice(invoice)
+    }
+  }, [invoice?.invoiceNo])
 
   const result = useMemo(() => {
     if (!invoice) return null
 
     const key = invoice.invoiceNo?.trim().toLowerCase()
     const hasValidKey = !!key && key !== 'n/a'
-    const isDuplicate = hasValidKey && processedSet?.has(key)
-    if (!isDuplicate) {
-      if (hasValidKey) {
-        setProcessedSet?.(prev => new Set([...prev, key]))
-      }
-      registerInvoice(invoice)
-    }
+    // Check duplicate: true only if it was in the set BEFORE this invoice was registered
+    const isDuplicate = hasValidKey && processedSet?.has(key) && registeredRef.current !== key
 
     const math = verifyMath(invoice)
     const rules = validateBusinessRules(invoice, po, userRules)

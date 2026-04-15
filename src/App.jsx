@@ -155,7 +155,7 @@ export default function App() {
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '1.25rem' }}>
                 <ExportReport invoice={invoice} po={po} result={result} />
-                <button onClick={() => { setProcessedSet(new Set()); reset(); }}style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--cream-deep)', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontFamily: 'Geist, sans-serif', cursor: 'pointer' }}>
+                <button onClick={() => { reset(); }}style={{ background: 'transparent', color: 'var(--ink-muted)', border: '1px solid var(--cream-deep)', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontFamily: 'Geist, sans-serif', cursor: 'pointer' }}>
                 ↩ Process Another
               </button>
               </div>
