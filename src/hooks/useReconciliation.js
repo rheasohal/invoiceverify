@@ -44,7 +44,13 @@ export function useReconciliation(invoice, po, grn, userRules, processedSet, set
         if (!qtyMatch) {
           discrepancies.push({ field: `Quantity — ${invItem.desc}`, invoiceVal: `${invItem.qty} units`, poVal: `${poItem.qty} units`, severity: 'medium' })
           if (grn) {
-            const grnItem = grn.receivedItems?.find(g => g.desc === invItem.desc)
+            // Match GRN item by: 1) PO description (GRNs are created against POs), 2) invoice description, 3) index
+            const grnItem = grn.receivedItems?.find(g =>
+              g.desc?.toLowerCase() === poItem.desc?.toLowerCase() ||
+              g.desc?.toLowerCase() === invItem.desc?.toLowerCase() ||
+              g.desc?.toLowerCase().includes(invItem.desc?.toLowerCase()) ||
+              invItem.desc?.toLowerCase().includes(g.desc?.toLowerCase())
+            ) || grn.receivedItems?.[i]
             if (grnItem && grnItem.qtyReceived !== invItem.qty) {
               discrepancies.push({ field: `GRN Mismatch — ${invItem.desc}`, invoiceVal: `Invoice: ${invItem.qty}`, poVal: `GRN received: ${grnItem.qtyReceived}`, severity: 'high' })
             }
